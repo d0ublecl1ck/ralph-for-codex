@@ -2,7 +2,7 @@
 
 ![Ralph](ralph.webp)
 
-Ralph is an autonomous AI agent loop that runs [Amp](https://ampcode.com) repeatedly until all PRD items are complete. Each iteration is a fresh Amp instance with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
+Ralph is an autonomous AI agent loop that runs Codex repeatedly until all PRD items are complete. Each iteration is a fresh Codex run with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
 
 Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
@@ -10,7 +10,7 @@ Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
 ## Prerequisites
 
-- [Amp CLI](https://ampcode.com) installed and authenticated
+- Codex CLI installed and authenticated
 - `jq` installed (`brew install jq` on macOS)
 - A git repository for your project
 
@@ -30,24 +30,27 @@ chmod +x scripts/ralph/ralph.sh
 
 ### Option 2: Install skills globally
 
-Copy the skills to your Amp config for use across all projects:
+Copy the skills to your Codex config for use across all projects:
 
 ```bash
-cp -r skills/prd ~/.config/amp/skills/
-cp -r skills/ralph ~/.config/amp/skills/
+cp -r skills/prd ~/.config/codex/skills/
+cp -r skills/ralph ~/.config/codex/skills/
 ```
 
-### Configure Amp auto-handoff (recommended)
+### Configure Codex defaults (recommended)
 
-Add to `~/.config/amp/settings.json`:
+Ralph uses `codex exec` under the hood. You can customize the command in `ralph.sh`, or set defaults in your shell profile to avoid repeating flags.
 
-```json
-{
-  "amp.experimental.autoHandoff": { "context": 90 }
-}
+Example command (matches the default in this repo):
+
+```bash
+codex exec - \
+  -m gpt-5.2-codex \
+  -c model_reasoning_effort="xhigh" \
+  -c model_reasoning_summary_format=experimental \
+  --enable web_search_request \
+  --dangerously-bypass-approvals-and-sandbox
 ```
-
-This enables automatic handoff when context fills up, allowing Ralph to handle large stories that exceed a single context window.
 
 ## Workflow
 
@@ -84,7 +87,7 @@ Ralph will:
 2. Pick the highest priority story where `passes: false`
 3. Implement that single story
 4. Run quality checks (typecheck, tests)
-5. Commit if checks pass
+5. Commit if checks pass (via git-commit-all workflow)
 6. Update `prd.json` to mark story as `passes: true`
 7. Append learnings to `progress.txt`
 8. Repeat until all stories pass or max iterations reached
@@ -93,8 +96,8 @@ Ralph will:
 
 | File | Purpose |
 |------|---------|
-| `ralph.sh` | The bash loop that spawns fresh Amp instances |
-| `prompt.md` | Instructions given to each Amp instance |
+| `ralph.sh` | The bash loop that spawns fresh Codex runs |
+| `prompt.md` | Instructions given to each Codex run |
 | `prd.json` | User stories with `passes` status (the task list) |
 | `prd.json.example` | Example PRD format for reference |
 | `progress.txt` | Append-only learnings for future iterations |
@@ -120,7 +123,7 @@ npm run dev
 
 ### Each Iteration = Fresh Context
 
-Each iteration spawns a **new Amp instance** with clean context. The only memory between iterations is:
+Each iteration spawns a **new Codex run** with clean context. The only memory between iterations is:
 - Git history (commits from previous iterations)
 - `progress.txt` (learnings and context)
 - `prd.json` (which stories are done)
@@ -142,7 +145,7 @@ Too big (split these):
 
 ### AGENTS.md Updates Are Critical
 
-After each iteration, Ralph updates the relevant `AGENTS.md` files with learnings. This is key because Amp automatically reads these files, so future iterations (and future human developers) benefit from discovered patterns, gotchas, and conventions.
+After each iteration, Ralph updates the relevant `AGENTS.md` files with learnings. This is key because Codex automatically reads these files, so future iterations (and future human developers) benefit from discovered patterns, gotchas, and conventions.
 
 Examples of what to add to AGENTS.md:
 - Patterns discovered ("this codebase uses X for Y")
@@ -158,7 +161,7 @@ Ralph only works if there are feedback loops:
 
 ### Browser Verification for UI Stories
 
-Frontend stories must include "Verify in browser using dev-browser skill" in acceptance criteria. Ralph will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
+Frontend stories must include "Verify in browser using available browser tooling" in acceptance criteria. Ralph will navigate to the page, interact with the UI, and confirm changes work.
 
 ### Stop Condition
 
@@ -193,4 +196,4 @@ Ralph automatically archives previous runs when you start a new feature (differe
 ## References
 
 - [Geoffrey Huntley's Ralph article](https://ghuntley.com/ralph/)
-- [Amp documentation](https://ampcode.com/manual)
+- Codex CLI reference: https://developers.openai.com/codex/cli/reference

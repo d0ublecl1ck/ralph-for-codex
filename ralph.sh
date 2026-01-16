@@ -59,8 +59,14 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   echo "  Ralph Iteration $i of $MAX_ITERATIONS"
   echo "═══════════════════════════════════════════════════════"
   
-  # Run amp with the ralph prompt
-  OUTPUT=$(cat "$SCRIPT_DIR/prompt.md" | amp --dangerously-allow-all 2>&1 | tee /dev/stderr) || true
+  # Run codex with the ralph prompt
+  OUTPUT=$(cat "$SCRIPT_DIR/prompt.md" | codex exec - \
+    -m gpt-5.2-codex \
+    -c model_reasoning_effort="xhigh" \
+    -c model_reasoning_summary_format=experimental \
+    --enable web_search_request \
+    --dangerously-bypass-approvals-and-sandbox \
+    2>&1 | tee /dev/stderr) || true
   
   # Check for completion signal
   if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then
