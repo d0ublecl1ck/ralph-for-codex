@@ -11,6 +11,13 @@ PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
 ARCHIVE_DIR="$SCRIPT_DIR/archive"
 LAST_BRANCH_FILE="$SCRIPT_DIR/.last-branch"
 
+# Abort early if PRD is missing
+if [ ! -f "$PRD_FILE" ]; then
+  echo "Missing prd.json at $PRD_FILE"
+  echo "Create prd.json before running Ralph."
+  exit 1
+fi
+
 # Archive previous run if branch changed
 if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then
   CURRENT_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE" 2>/dev/null || echo "")
